@@ -12,4 +12,6 @@ jobs:
 
 `title.yml` checks that a pull request title is a Conventional Commit line. It reports as `title / Conventional PR title`, the check the fleet's rulesets require.
 
+`cliff.toml` is the changelog configuration every repository's `mise run changelog` fetches from this repository's main. It files each Conventional type where the commit reference in the skills says it goes, and `mise run check` here proves the release-draft configuration files them the same way.
+
 `release-draft.yml` labels pull requests from their titles and keeps one draft release listing what is unreleased. It titles releases `<repository> v<version>`, reads its rules from `release-drafter.yml` here, and takes `pre_v1: true` for a repository whose breaking changes should advance the minor version.

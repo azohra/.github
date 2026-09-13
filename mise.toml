@@ -1,6 +1,14 @@
 [tools]
 actionlint = "1.7.12"
+python = "3.14"
+yq = "4.53.6"
+"aqua:orhun/git-cliff" = "2.14.1"
 
 [tasks.check]
-description = "Lint the workflows"
-run = "actionlint"
+description = "Lint the workflows and prove the change table is implemented once"
+run = ["actionlint", "python scripts/check_taxonomy.py"]
+
+[tasks.changelog]
+description = "Render a repository's changelog with the fleet's configuration (pass --repository)"
+raw_args = true
+run = 'git cliff --config cliff.toml "$@"'
