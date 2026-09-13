@@ -21,6 +21,11 @@ def types(pattern):
     return set(match.group(1).split('|')) if match else set()
 
 
+def read_yaml(path):
+    return json.loads(subprocess.run(['yq', '-o', 'json', str(path)],
+                                    capture_output=True, text=True, check=True).stdout)
+
+
 def check_cliff():
     parsers = tomllib.loads((ROOT / 'cliff.toml').read_text())['git']['commit_parsers']
     skipped = set().union(*(types(p['message']) for p in parsers if p.get('skip')))
@@ -33,7 +38,7 @@ def check_cliff():
 
 
 def check_drafter(path):
-    config = json.loads(subprocess.run(['yq', '-o', 'json', str(path)], capture_output=True, text=True, check=True).stdout)
+    config = read_yaml(path)
     labelled = {}
     for rule in config['autolabeler']:
         for pattern in rule['title']:
@@ -52,7 +57,19 @@ def main():
     check_cliff()
     for name in ('release-drafter.yml', 'release-drafter-pre-v1.yml'):
         check_drafter(ROOT / '.github' / name)
-    print('taxonomy: cliff.toml and both release-draft configs agree')
+    workflow = read_yaml(ROOT / '.github/workflows/title.yml')
+    label = workflow['jobs']['label']
+    assert label['steps'][0]['with']['config-name'] == 'azohra/.github:release-drafter.yml@main', \
+        'The shared label config must resolve to its provider across repository owners'
+    assert 'needs' not in workflow['jobs']['title'], 'Labeling must not gate title validation'
+    contract = json.loads((ROOT / 'shared-workflows.json').read_text())
+    assert contract['path'] == '.github/workflows/conventional-pr.yml'
+    caller = read_yaml(ROOT / contract['path'])
+    assert caller['jobs']['title']['uses'] == './.github/workflows/title.yml'
+    caller['jobs']['title']['uses'] = 'azohra/.github/.github/workflows/title.yml@main'
+    assert {k: v for k, v in caller.items() if k != 'name'} == contract['workflow'], \
+        'The audit contract must match the shared title caller'
+    print('taxonomy: changelog, draft and shared label configuration agree')
 
 
 if __name__ == '__main__':

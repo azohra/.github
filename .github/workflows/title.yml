@@ -39,4 +39,4 @@ jobs:
     steps:
       - uses: release-drafter/release-drafter/autolabeler@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
-          config-name: .github:release-drafter.yml
+          config-name: azohra/.github:release-drafter.yml@main
