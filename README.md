@@ -11,3 +11,5 @@ jobs:
 ```
 
 `title.yml` checks that a pull request title is a Conventional Commit line. It reports as `title / Conventional PR title`, the check the fleet's rulesets require.
+
+`release-draft.yml` labels pull requests from their titles and keeps one draft release listing what is unreleased. It titles releases `<repository> v<version>`, reads its rules from `release-drafter.yml` here, and takes `pre_v1: true` for a repository whose breaking changes should advance the minor version.
