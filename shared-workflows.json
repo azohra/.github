@@ -1,0 +1,23 @@
+{
+  "path": ".github/workflows/conventional-pr.yml",
+  "workflow": {
+    "on": {
+      "pull_request_target": {
+        "types": [
+          "opened",
+          "reopened",
+          "edited",
+          "synchronize"
+        ]
+      }
+    },
+    "permissions": {
+      "pull-requests": "write"
+    },
+    "jobs": {
+      "title": {
+        "uses": "azohra/.github/.github/workflows/title.yml@main"
+      }
+    }
+  }
+}
