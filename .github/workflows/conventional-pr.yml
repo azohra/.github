@@ -1,0 +1,12 @@
+name: Conventional PR
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    uses: ./.github/workflows/title.yml

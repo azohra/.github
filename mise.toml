@@ -1,0 +1,6 @@
+[tools]
+actionlint = "1.7.12"
+
+[tasks.check]
+description = "Lint the workflows"
+run = "actionlint"
