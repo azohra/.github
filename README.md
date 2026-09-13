@@ -14,6 +14,14 @@ jobs:
 
 `cliff.toml` is the changelog configuration every repository's `mise run changelog` fetches from this repository's main. It files each Conventional type where the commit reference in the skills says it goes, and `mise run check` here proves the release-draft configuration files them the same way.
 
+Dependabot uses `ci(deps)` for Actions, `fix(deps)` for runtime or unclassified
+dependencies, and `build(deps-dev)` for development dependencies where supported.
+Runtime refreshes are deliberately eligible for patch releases; routine updates
+keep their generated type. Separate production and development groups preserve
+that classification. Dependabot cannot infer breaking changes to a consuming
+application; add breaking markers when its supported contract changes. The
+existing title, label and release rules implement these defaults.
+
 `release-draft.yml` keeps one draft release listing what is unreleased, grouped by the labels the title check wrote. It titles releases `<repository> v<version>`, reads its rules from `release-drafter.yml` here, and takes `pre_v1: true` for a repository whose breaking changes should advance the minor version.
 
 `shared-workflows.json` declares the title caller's reference, PR events and
