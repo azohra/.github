@@ -10,7 +10,7 @@ jobs:
     uses: azohra/.github/.github/workflows/title.yml@main
 ```
 
-`title.yml` checks that a pull request title is a Conventional Commit line and labels the pull request with the type's label from the change table. The check reports as `title / Conventional PR title`, the name the fleet's rulesets require; the label job is separate so it can never block a merge. Callers grant it `pull-requests: write`. The labeler explicitly reads `azohra/.github:release-drafter.yml@main`, so callers in other accounts use the same change table.
+`title.yml` checks that a pull request title is a Conventional Commit line and labels the pull request with the type's label from the change table. The check reports as `title / Conventional PR title`, the name the fleet's rulesets require; the label job is separate so it can never block a merge. Callers grant it `pull-requests: write`. Both jobs run on `ubuntu-latest` unless the calling repository or its organization sets the `SHARED_WORKFLOW_RUNNER` variable to another runner label, such as an organization's larger runners. The labeler explicitly reads `azohra/.github:release-drafter.yml@main`, so callers in other accounts use the same change table.
 
 `cliff.toml` is the changelog configuration every repository's `mise run changelog` fetches from this repository's main. It files each Conventional type where the commit reference in the skills says it goes, and `mise run check` here proves the release-draft configuration files them the same way.
 
