@@ -24,7 +24,32 @@ existing title, label and release rules implement these defaults.
 
 `release-draft.yml` keeps one draft release listing what is unreleased, grouped by the labels the title check wrote. It titles releases `<repository> v<version>`, reads its rules from `release-drafter.yml` here, and takes `pre_v1: true` for a repository whose breaking changes should advance the minor version.
 
-`shared-workflows.json` declares the title caller's reference, PR events and
-permissions for policy audits. Reference drift is reported by the policy audit;
-there is no additional pull request check. The native required title result
-and the independent label job keep their existing roles.
+`dependabot-merge.yml` turns on GitHub's auto-merge, squashing, for a patch or minor Dependabot update; a major waits for a person. The required checks still gate the merge. It runs on `pull_request_target` and checks nothing out, reads the update's type from Dependabot's commit, and acts as the Azohra Bosun app with a token limited to the calling repository's contents and pull requests, so the merge starts the workflows on `main` that a merge by `GITHUB_TOKEN` would not. The caller passes `BOSUN_PRIVATE_KEY`, which with the `BOSUN_CLIENT_ID` variable lives in the calling repository's `automation` environment, deployable from `main` only, because the key reaches every repository Bosun is installed in:
+
+```yaml
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  merge:
+    uses: azohra/.github/.github/workflows/dependabot-merge.yml@main
+    secrets:
+      BOSUN_PRIVATE_KEY: ${{ secrets.BOSUN_PRIVATE_KEY }}
+```
+
+`shared-workflows.json` declares the reference, pull request events and
+permissions of the two callers that have one fixed shape, the title caller and
+the Dependabot auto-merge caller, for policy audits. Reference drift is
+reported by the policy audit; there is no additional pull request check. The
+native required title result and the independent label job keep their
+existing roles.
