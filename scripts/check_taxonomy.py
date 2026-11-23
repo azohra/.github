@@ -62,7 +62,7 @@ def main():
     assert label['steps'][0]['with']['config-name'] == 'azohra/.github:release-drafter.yml@main', \
         'The shared label config must resolve to its provider across repository owners'
     assert 'needs' not in workflow['jobs']['title'], 'Labeling must not gate title validation'
-    contract = json.loads((ROOT / 'shared-workflows.json').read_text())
+    contract = json.loads((ROOT / 'shared-workflows.json').read_text())['title']
     assert contract['path'] == '.github/workflows/conventional-pr.yml'
     caller = read_yaml(ROOT / contract['path'])
     assert caller['jobs']['title']['uses'] == './.github/workflows/title.yml'

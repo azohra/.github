@@ -1,0 +1,69 @@
+name: Dependabot auto-merge
+
+on:
+  workflow_call:
+    secrets:
+      BOSUN_PRIVATE_KEY:
+        required: true
+
+jobs:
+  # A patch or minor update merges itself once the required checks pass; a
+  # major waits for a person. Bosun turns auto-merge on rather than the
+  # GITHUB_TOKEN, because a merge by the GITHUB_TOKEN starts no workflow on
+  # main, so nothing would deploy after it.
+  merge:
+    name: Auto-merge
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ${{ vars.SHARED_WORKFLOW_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    # Bosun's key mints a token for every repository Bosun is installed in, so
+    # it is held in an environment only main may use. The caller runs on
+    # pull_request_target, which runs main's workflow; nothing from the pull
+    # request is checked out.
+    environment:
+      name: automation
+      deployment: false
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      # Reads the update's type from the pull request's first commit, and fails
+      # unless Dependabot made and GitHub signed it. It looks at no later
+      # commit, so the merge below also needs that commit to be the only one.
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ github.token }}
+      - id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.BOSUN_CLIENT_ID }}
+          private-key: ${{ secrets.BOSUN_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+          # An Actions update changes workflow files, which an app may merge
+          # only with this.
+          permission-workflows: write
+      - if: >-
+          github.event.pull_request.commits == 1 && (
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          PULL_REQUEST: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PULL_REQUEST"
+      # A major, or a pull request someone else has pushed to since, waits for
+      # a person, even where auto-merge was turned on before.
+      - if: >-
+          github.event.pull_request.commits != 1 || (
+          steps.metadata.outputs.update-type != 'version-update:semver-patch' &&
+          steps.metadata.outputs.update-type != 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          PULL_REQUEST: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ "$(gh pr view "$PULL_REQUEST" --json autoMergeRequest --jq '.autoMergeRequest != null')" = true ]; then
+            gh pr merge --disable-auto "$PULL_REQUEST"
+          fi
