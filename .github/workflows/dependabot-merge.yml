@@ -45,6 +45,9 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
+          # An Actions update changes workflow files, which an app may merge
+          # only with this.
+          permission-workflows: write
       - if: steps.token.outcome == 'success'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
